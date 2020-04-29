@@ -7,34 +7,6 @@ use regex::{Regex};
 use std::env;
 use crate::linker_that_configures_cmake::linker_main;
 
-
-pub fn install_as_linker_or_run_as_linker() {
-    println!("BEGIN install_as_linker__or__run_as_linker: {:?}",std::env::current_exe().unwrap());
-    if env::var("CARGO_MANIFEST_DIR").is_err() {
-        env::set_var("CARGO_MANIFEST_DIR", env::current_dir().unwrap().to_str().unwrap());
-    }
-    println!("  CARGO_MANIFEST_DIR = {:?}", env::var("CARGO_MANIFEST_DIR").unwrap());
-    println!("  CWD = {:?}", env::current_dir().unwrap());
-
-    println!("cargo:rerun-if-changed=sdkconfig");
-    println!("cargo:rerun-if-changed=build.rs");
-
-    let me = std::env::current_exe().unwrap();
-    let me_ext = me.extension().unwrap_or( OsStr::new("")).to_str().unwrap();
-    let linker = format!("esp-rust-linker{}{}",
-                         if me_ext.len() > 0 {"."} else {""},
-                         me_ext);
-    let linker_path = format!("{}/target/{}", env::var("CARGO_MANIFEST_DIR").unwrap(), linker);
-
-    let running_as_linker = me.file_name().unwrap().eq(linker.as_str());
-
-    if running_as_linker {
-        linker_main().expect("Failed to configure cmake");
-    } else {
-        install_linker(&linker_path);
-    }
-}
-
 fn install_linker(linker_path: &String) {
     println!("BEGIN install_linker: {:?}",std::env::current_exe().unwrap());
 
