@@ -58,7 +58,7 @@ fn get_idf_tools_path() -> String {
     return String::from(tools_dir.to_str().unwrap());
 }
 
-fn generate_bindings(src_h_path:&String, dest_rs_path:&String, prefix:&str) {
+fn generate_bindings(idf_project_path:&String, src_h_path:&String, dest_rs_path:&String, prefix:&String) {
     let idf_path =get_idf_path();
     let idf_tools_path = get_idf_tools_path();
 
@@ -82,7 +82,7 @@ fn generate_bindings(src_h_path:&String, dest_rs_path:&String, prefix:&str) {
 
     clang_include_args.push(format!("-I{}/include",idf_tools_path)); // There is always one...
     clang_include_args.push(format!("-I{}/xtensa-esp32-elf/include",idf_tools_path)); // There is always one...
-    clang_include_args.push(format!("-I{}/build/config", env::var("CARGO_MANIFEST_DIR").unwrap())); // There is always one...
+    clang_include_args.push(format!("-I{}/build/config", idf_project_path)); // There is always one...
 
     let components_path = format!("{}/components", idf_path);
     let search_includes = Path::new(components_path.as_str());
@@ -157,14 +157,7 @@ fn should_build(source_path: &String, target_path: &String) -> Result<bool, std:
     Ok(false)
 }
 
-pub fn generate_bindings_from_build_rs_default() {
-    generate_bindings_from_build_rs(
-        &format!("{}/main/bindings.h", env::var("CARGO_MANIFEST_DIR").unwrap()),
-    &format!("{}/src/bindings.rs", env::var("CARGO_MANIFEST_DIR").unwrap()),
-        "crate::std::os::raw");
-}
-
-pub fn generate_bindings_from_build_rs(source_path:&String, target_path:&String, prefix:&str) {
+pub fn generate_bindings_from_build_rs(idf_project_path:&String, source_path:&String, target_path:&String, prefix:&String) {
     println!("BEGIN generate_bindings_from_build_rs: {:?}",std::env::current_exe().unwrap());
     if env::var("CARGO_MANIFEST_DIR").is_err() {
         env::set_var("CARGO_MANIFEST_DIR", env::current_dir().unwrap().to_str().unwrap());
@@ -179,7 +172,7 @@ pub fn generate_bindings_from_build_rs(source_path:&String, target_path:&String,
     let should_build = should_build(&source_path, &target_path);
     if should_build.is_ok() {
         if should_build.unwrap_or(false) {
-            generate_bindings(&source_path, &target_path, prefix);
+            generate_bindings(&idf_project_path,&source_path, &target_path, prefix);
         }
     } else {
         println!("Unable to build: {} relative to my path {:?}", should_build.unwrap_err(), env::current_dir().unwrap());
